@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title></title>
+</head><body>
+<h1>table-calc</h1>
+<main id=main></main>
+<hr>
+<a href=https://github.com/code4fukui/table-calc/>src on GitHub</a><br>
+
+<script type="module">
+import { InputTable } from "https://code4fukui.github.io/input-table/input-table.js";
+import { monaco } from "https://code4fukui.github.io/monaco-editor/monaco.js";
+import { CSV } from "https://js.sabae.cc/CSV.js";
+
+const makeArray2 = (rows, cols) => {
+  const res = new Array(rows);
+  for (let i = 0; i < res.length; i++) {
+    res[i] = new Array(cols);
+  }
+  return res;
+};
+
+const tbl = new InputTable();
+tbl.value = makeArray2(5, 10);
+main.appendChild(tbl);
+
+const diveditor = document.createElement("div");
+diveditor.style.height = "20em";
+
+const editor = monaco.editor.create(diveditor, {
+  language: "javascript",
+  autoIndent: true,
+  //autoIndent: "none",
+  formatOnPaste: true,
+  //formatOnType: true,
+  tabSize: 2,
+  minimap: { enabled: false },
+  //overflow: "auto",
+  automaticLayout: true,
+  theme: "vs-dark",
+});
+main.appendChild(diveditor);
+editor.setValue(`log(tbl.length);`);
+
+//const output = document.createElement("textarea");
+//main.appendChild(output);
+
+tbl.onchange = editor.onchange = () => {
+  const csv = CSV.decode(tbl.value);
+  globalThis.value = csv;
+  globalThis.nrow = csv.length;
+  globalThis.ncol = csv[0].length;
+  globalThis.get = (row, col) => tbl.get(row, col);
+  globalThis.set = (row, col, v) => tbl.set(row, col, v);
+  globalThis.log = (s) => {
+    //output.value += s + "\n";
+    console.log(s);
+  };
+  eval(editor.getValue());
+};
+
+tbl.value = `品名,単価,数量,小計
+A,300,30,9000
+B,50,15,750
+C,20,3,60
+,,,9810`;
+
+editor.setValue(`let sum = 0;
+for (let i = 1; i < nrow - 1; i++) {
+  const v = get(i, 1) * get(i, 2);
+  set(i, 3, v);
+  sum += v;
+}
+set(nrow - 1, 3, sum);
+`);
+
+</script>
+
+<style>
+</style>
